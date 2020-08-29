@@ -49,32 +49,48 @@ class discBot():
             self.author = message.author
             self.authorid = message.author.id
             
-            if self.content.startswith (';bindserver'):                
-                self.channel = message.channel
-                
+            if self.content.startswith (';bindserver'):  
                 if self.authorid in self.trusted:
+                              
+                    self.channel = message.channel
+                    
+                    
                     split = self.content.split()
                     await self.channel.send('logging for {} binded to {}'.format(split[1], self.channel)) 
                     masterDict = {int(split[1]) : message.channel.id}
                     self.writeJson(masterDict)
+                    
                 else:
-                    await self.author.send("you don't have permission to do that :c")
-            
+                        await self.author.send("you don't have permission to do that :c")
+                        
+            if self.content.startswith(';help'):
+                if self.authorid in self.trusted:
+                    helpMessage = ''';help - help
+;bindserver (x) - binds all messages from x (server ID) to be sent to this current channel
+                        '''
+                    await message.channel.send(helpMessage)
+                    
+                    
+                else:
+                        await self.author.send("you don't have permission to do that :c")
+                    
             if message.author != client.user:
                 if str(message.guild.id) in self.jsonDict:
                     loggedChannel = self.jsonDict.get(str(message.guild.id))
                     loggedChannelGet = client.get_channel(loggedChannel)
                     
-                    discordContent = "[<@{}>] said [``{}``] in [`{}`] (server [{}], with id [{}] ".format(message.author.id, message.content, message.channel, message.guild, message.guild.id)
-                    
-                    await loggedChannelGet.send(discordContent)
+                    embedVar = discord.Embed(title="Message sent in {}, (ID:{})".format(message.guild, message.guild.id), description='{}'.format(message.content), color=0x00ff00)
+                    embedVar.add_field(name="Channel: {}, (ID:{})".format(message.channel, message.channel.id), value='by <@{}> (ID:{})'.format(message.author.id, message.author.id), inline=True)
+
+                    await loggedChannelGet.send(embed=embedVar)
                     
             
     def run(self):
         self.serverBind()
-        client.run('bot-token')
+        client.run(INSERT BOT TOKEN HERE)
         
     
+
 if __name__ == "__main__":
     client = discord.Client()
     nest_asyncio.apply()
