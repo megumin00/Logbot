@@ -87,7 +87,7 @@ class discBot():
             
     def run(self):
         self.serverBind()
-        client.run(INSERT BOT TOKEN HERE)
+        client.run('NTQxODM4NjY3Mjc5MjM3MTI3.XFfAlQ.5WU_tqu-sLUBcgoXkCWM-d34bl4')
         
     
 
@@ -97,3 +97,4 @@ if __name__ == "__main__":
     
     discBot = discBot()
     discBot.run()
+
