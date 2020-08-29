@@ -87,7 +87,7 @@ class discBot():
             
     def run(self):
         self.serverBind()
-        client.run('NTQxODM4NjY3Mjc5MjM3MTI3.XFfAlQ.5WU_tqu-sLUBcgoXkCWM-d34bl4')
+        client.run('bot-token-here')
         
     
 
