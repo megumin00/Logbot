@@ -8,6 +8,7 @@ Created on Thu Aug 27 15:02:02 2020
 import discord
 import nest_asyncio
 import json
+from discord.ext import commands
 
 class discBot():
     
@@ -38,6 +39,12 @@ class discBot():
         #this only exists so I don't feel sad whenever i try to find what im calling
         self.readJson()
         self.jsonDict = self.jsonObject
+        
+    def trustedCommands(self):
+        @bot.command()
+        async def test(ctx, arg):
+            await ctx.send(arg)
+            
     
             
     def serverBind(self):
@@ -65,10 +72,15 @@ class discBot():
                         
             if self.content.startswith(';help'):
                 if self.authorid in self.trusted:
-                    helpMessage = ''';help - help
-;bindserver (x) - binds all messages from x (server ID) to be sent to this current channel
-                        '''
-                    await message.channel.send(helpMessage)
+                    helpMessage = discord.Embed(color=0x00FFFF)
+                    helpMessage.set_author(name='help has arrived',
+                    icon_url='https://cdn.discordapp.com/attachments/748479776666419223/749449403080900698/chillstolfo.png')
+                    
+                    helpMessage.add_field(name=";help", value='prints out this menu')
+                    helpMessage.add_field(name=";bindserver (server ID)", value='binds all messages from that server to be redirected to this channel (needs bot inside that server)')
+                    helpMessage.add_field(name=';dispalyactive', value='displays all active servers for this channel')
+                    
+                    await message.channel.send(embed=helpMessage)
                     
                     
                 else:
@@ -79,22 +91,30 @@ class discBot():
                     loggedChannel = self.jsonDict.get(str(message.guild.id))
                     loggedChannelGet = client.get_channel(loggedChannel)
                     
-                    embedVar = discord.Embed(title="Message sent in {}, (ID:{})".format(message.guild, message.guild.id), description='{}'.format(message.content), color=0x00ff00)
+                    embedVar = discord.Embed(title="{}".format(message.content), color=0x00ff00)
+                    embedVar.set_author(name="Message sent in {}, (ID:{})".format(message.guild, message.guild.id))
                     embedVar.add_field(name="Channel: {}, (ID:{})".format(message.channel, message.channel.id), value='by <@{}> (ID:{})'.format(message.author.id, message.author.id), inline=True)
 
                     await loggedChannelGet.send(embed=embedVar)
                     
+                    
+            await client.process_commands(message)
+                    
             
     def run(self):
+        self.trustedCommands()
         self.serverBind()
-        client.run('bot-token-here')
+        
+        client.run('')
         
     
 
 if __name__ == "__main__":
-    client = discord.Client()
+    client = discord.Client()   
+    bot = commands.Bot(command_prefix=';')
+
     nest_asyncio.apply()
+    
     
     discBot = discBot()
     discBot.run()
-
