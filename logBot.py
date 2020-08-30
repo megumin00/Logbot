@@ -19,6 +19,8 @@ class discBot():
         async def on_ready():
             
             print('We have logged in as {0.user}'.format(bot))
+            channelRecipient = bot.get_channel(748479776666419223)
+            await channelRecipient.send('Bot online now.')
             
     def readJson(self):
         with open('servers.json', 'r') as openfile: 
@@ -40,7 +42,6 @@ class discBot():
         @bot.command()
         async def bindserver(message):
             self.readJson()
-            print(message)
             if message.author.id in self.trusted:               
                     
                 splitContent = message.message.content.split()
@@ -79,7 +80,7 @@ class discBot():
 
             async for i in message.history(limit=1):
                 selfClear = [i]
-                await asyncio.sleep(1)
+                await asyncio.sleep(3)
                 await message.channel.delete_messages(selfClear)
                 
         
