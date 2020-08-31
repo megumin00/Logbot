@@ -66,7 +66,7 @@ class discBot():
                 await message.channel.send(embed=self.displayActive)
                     
                 
-    def adminCommands(self, pass_context=True):
+    def adminCommands(self):
         @bot.command()
         @commands.has_permissions(manage_messages=True)
         async def clear(message, arg):
@@ -169,6 +169,21 @@ class discBot():
             moreInfo = discord.Embed(title='https://github.com/megumin00/authoritarian-dictatorship-discbot')
             
             await message.channel.send(embed=moreInfo)
+            
+        @bot.command()
+        async def embedthis(message, title, *args):
+            user = message.guild.get_member(message.author.id)
+            pfp = user.avatar_url
+            embedList = ''
+            for i in args:
+                embedList = embedList + ' ' + i
+                
+            embedSend = discord.Embed(color=0xBDBDFF)
+            embedSend.set_author(name='Embed requested from {}'.format(message.author),
+            icon_url=str(pfp))
+            embedSend.add_field(name=title, value=embedList)
+            
+            await message.channel.send(embed=embedSend)
                 
         
             
