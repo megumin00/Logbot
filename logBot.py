@@ -157,7 +157,7 @@ class discBot():
             
             helpOwner.add_field(name=";bindserver (server ID)", value='binds all messages from that server to be redirected to this channel (needs bot inside that server)', inline=True)
             helpOwner.add_field(name=';displayactive', value='displays all active servers for this channel', inline=True)
-            helpOwner.add_field(name=';annoy (user ID)', value='you get annoyeed. Idiot', inline=True)
+            helpOwner.add_field(name=';annoy (user ID)', value='you get annoyed. Idiot', inline=True)
             helpOwner.set_footer(text="this only exists because I don't comment my code :c (check out my github)")
             
             await message.channel.send(embed=helpOwner)
