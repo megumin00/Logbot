@@ -19,7 +19,7 @@ class discBot():
         async def on_ready():
             
             print('We have logged in as {0.user}'.format(bot))
-            channelRecipient = bot.get_channel(748479776666419223)
+            channelRecipient = bot.get_channel(749641829544230957)
             await channelRecipient.send('Bot online now.')
             
     def readJson(self):
@@ -66,8 +66,9 @@ class discBot():
                 await message.channel.send(embed=self.displayActive)
                     
                 
-    def adminCommands(self):
+    def adminCommands(self, pass_context=True):
         @bot.command()
+        @commands.has_permissions(manage_messages=True)
         async def clear(message, arg):
             messages = []
             
@@ -82,6 +83,53 @@ class discBot():
                 selfClear = [i]
                 await asyncio.sleep(3)
                 await message.channel.delete_messages(selfClear)
+                
+        @bot.command()
+        @commands.has_permissions(kick_members=True)
+        async def kick(message, arg, *args):
+            kickVictim = await bot.fetch_user(arg)
+            
+            
+            kickEmbed = discord.Embed(color=0xFFBDBD)
+            kickEmbed.set_author(name='action: User Kicked')
+
+            if args == ():
+                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked'.format(arg))
+            else:
+                kickReason = ''
+                for i in args:
+                    kickReason = kickReason + ' ' + i
+                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked for {}'.format(arg, kickReason))
+                
+            await message.guild.kick(kickVictim, reason=kickReason+' conducted by {}'.format(message.author))
+            await message.send(embed=kickEmbed)
+            
+        @bot.command()
+        @commands.has_permissions(ban_members=True)
+        async def ban(message, arg, days=0, *args):
+            banVictim = await bot.fetch_user(arg)
+            
+            banEmbed = discord.Embed(color=0xFFBDBD)
+            banEmbed.set_author(name='action: User banned')
+            
+            if int(days) != 0 and args == ():
+                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned (messages deleted in days: {})'.format(arg, int(days)))
+                await message.guild.ban(banVictim, delete_message_days=int(days))
+                
+            elif days == 0:
+                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned.'.format(arg))
+                await message.guild.ban(banVictim)
+                
+            else:
+                banReason = ''
+                for i in args:
+                    banReason = banReason + ' ' + i
+                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned for {} (messages deleted in days: {})'.format(arg, banReason, int(days)))
+                await message.guild.ban(banVictim, delete_message_days=int(days), reason=banReason)
+                
+            await message.send(embed=banEmbed)
+                
+        
                 
         
             
@@ -105,6 +153,8 @@ class discBot():
             
             helpAdmin = discord.Embed(color=0xFFFFCA, title="Admin Commands")
             helpAdmin.add_field(name=';clear (x)', value='clears x amount of messages in chat', inline=True )
+            helpAdmin.add_field(name=';kick (targetID) (reason)', value='kicks a member using their ID. Duh.', inline=True )
+            helpAdmin.add_field(name=';ban (targetID) (days) (reason)', value='bans a user using their ID. Duh.', inline=True )
             helpAdmin.set_footer(text="this only exists because I don't comment my code :c")
             
             await message.channel.send(embed=helpAdmin)
