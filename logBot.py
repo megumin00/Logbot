@@ -147,7 +147,7 @@ class discBot():
             
             helpOwner.add_field(name=";bindserver (server ID)", value='binds all messages from that server to be redirected to this channel (needs bot inside that server)', inline=True)
             helpOwner.add_field(name=';displayactive', value='displays all active servers for this channel', inline=True)
-            helpOwner.set_footer(text="this only exists because I don't comment my code :c")
+            helpOwner.set_footer(text="this only exists because I don't comment my code :c (check out my github)")
             
             await message.channel.send(embed=helpOwner)
             
@@ -155,14 +155,15 @@ class discBot():
             helpAdmin.add_field(name=';clear (x)', value='clears x amount of messages in chat', inline=True )
             helpAdmin.add_field(name=';kick (targetID) (reason)', value='kicks a member using their ID. Duh.', inline=True )
             helpAdmin.add_field(name=';ban (targetID) (days) (reason)', value='bans a user using their ID. Duh.', inline=True )
-            helpAdmin.set_footer(text="this only exists because I don't comment my code :c")
+            helpAdmin.set_footer(text="this only exists because I don't comment my code :c (check out my github)")
             
             await message.channel.send(embed=helpAdmin)
             
             helpUser = discord.Embed(color=0xBDFFBD, title='User Commands')
             helpUser.add_field(name=";help", value='prints out this menu', inline=True)
             helpUser.add_field(name=";ping", value='pong?', inline=True )
-            helpUser.set_footer(text="this only exists because I don't comment my code :c")
+            helpUser.add_field(name=";embedthis (title) (body)", value='takes your mortal loser message and converts it into an embed (useless, I know)', inline=True )
+            helpUser.set_footer(text="this only exists because I don't comment my code :c (check out my github)")
             
             await message.channel.send(embed=helpUser)
             
