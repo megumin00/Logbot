@@ -35,7 +35,6 @@ class discBot():
             forbidden = ['<', '>', '@', '!']
             ID = ''
             allow = bool
-            print(args)
             
             try:
                 if type(int(args)) == int:
@@ -142,42 +141,53 @@ class discBot():
 
             if args == ():
                 kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked'.format(self.ID))
+                await message.guild.kick(kickVictim, reason='conducted by {}'.format(message.author))
             else:
                 kickReason = ''
                 for i in args:
                     kickReason = kickReason + ' ' + i
                 kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked for {}'.format(self.ID, kickReason))
                 
-            await message.guild.kick(kickVictim, reason=kickReason+' conducted by {}'.format(message.author))
+                await message.guild.kick(kickVictim, reason=kickReason+' conducted by {}'.format(message.author))
             await message.send(embed=kickEmbed)
             
         @bot.command()
         @commands.has_permissions(ban_members=True)
-        async def ban(message, arg, days=0, *args):
-            banVictim = await bot.fetch_user(arg)
-            
+        async def ban(message, arg, days, *args):
+
+            self.mentionOrID(arg)
+            banVictim = await bot.fetch_user(self.ID)
             banEmbed = discord.Embed(color=0xFFBDBD)
             banEmbed.set_author(name='action: User banned')
             
-            if int(days) != 0 and args == ():
-                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned (messages deleted in days: {})'.format(arg, int(days)))
-                await message.guild.ban(banVictim, delete_message_days=int(days))
+            def noReason():
+                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned (messages deleted in days: {})'.format(self.ID, days))
                 
-            elif days == 0:
-                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned.'.format(arg))
-                await message.guild.ban(banVictim)
                 
-            else:
+            def withReason():
                 banReason = ''
                 for i in args:
-                    banReason = banReason + ' ' + i
-                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned for {} (messages deleted in days: {})'.format(arg, banReason, int(days)))
-                await message.guild.ban(banVictim, delete_message_days=int(days), reason=banReason)
+                    self.banReason = self.banReason + ' ' + i
+                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned for {} (messages deleted in days: {})'.format(self.ID, banReason, days))
                 
+
+
+            if type(days) == str:
+                days = 0
+                error = 'tl;dr, the correct format is ;ban (userID/mention) (days) (reason). You passed reason without passing days so it defaulted to 0 days and banned wihtout a reason. Use the correct formatting next time >:|'
+                banEmbed.set_footer(text=error)
+         
+            if args == ():
+                noReason()
+                await message.guild.ban(banVictim, delete_message_days=days)
+         
+            else:
+                withReason()
+                await message.guild.ban(banVictim, delete_message_days=days, reason=self.banReason) 
+            
             await message.send(embed=banEmbed)
-                
-        
-                
+            
+            
         
             
             
