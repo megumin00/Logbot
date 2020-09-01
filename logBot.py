@@ -57,43 +57,41 @@ class discBot():
             self.ID = ID
             
             
-    def readJson(self):
-        with open('servers.json', 'r') as openfile: 
+    def readJson(self, jsonFile):
+        with open(jsonFile, 'r') as openfile: 
             self.jsonDict = json.load(openfile)
             
             
-    def writeJson(self, dictName):
-        self.readJson()
-        
+    def writeJson(self, dictName, jsonFile):
+        self.readJson(jsonFile)
         tempDict = dictName
-        
-        tempDict.update(self.jsonDict)
+        self.jsonDict.update(tempDict)
 
-        json_object = json.dumps(tempDict, indent = 4)
+        json_object = json.dumps(self.jsonDict, indent = 4)
         
-        with open("servers.json", "w") as outfile: 
+        with open(jsonFile, "w") as outfile: 
             outfile.write(json_object)
         
         
     def trustedCommands(self):       
         @bot.command()
         async def bindserver(message, args):
-            self.readJson()
+            self.readJson('servers.json')
             if message.author.id in self.trusted:               
                 
                 bindEmbed = discord.Embed(color=0xFF99E5)
                 server = bot.get_guild(int(args))
                 bindEmbed.set_author(name='Action: Server binded to channel')
-                bindEmbed.add_field(name='server: {}'.format(server), value='binded to <#{}>'.format(message.channel.id))
+                bindEmbed.add_field(name='server: {}'.format(server), value='binded to <#{}>'.format(message.channel.id), inline=True)
                 await message.channel.send(embed=bindEmbed) 
                 masterDict = {int(args) : message.channel.id}
-                self.writeJson(masterDict)
+                self.writeJson(masterDict, 'servers.json')
                 
                 
         @bot.command()
         async def displayactive(message):
             if message.author.id in self.trusted:
-                self.readJson()
+                self.readJson('servers.json')
                 self.displayActive = discord.Embed(color=0xBD5CFF)
                 self.displayActive.set_author(name="Servers being Tracked".format(message.guild, message.guild.id),
                 icon_url='https://cdn.discordapp.com/attachments/748479776666419223/749449403080900698/chillstolfo.png')
@@ -108,7 +106,7 @@ class discBot():
             if message.author.id in self.trusted:
                 annoyEmbed = discord.Embed(title='Victims being annoyed:', color=0xE5FF99)
                 for i in self.annoyList:
-                    annoyEmbed.add_field(name='Victim:', value='<@{}>'.format(i))
+                    annoyEmbed.add_field(name='Victim:', value='<@{}>'.format(i), inline=True)
                 await message.channel.send(embed=annoyEmbed)
         
         @bot.command()
@@ -120,23 +118,107 @@ class discBot():
                 
                 if self.ID in self.annoyList:
                     self.annoyList.remove(self.ID)
-                    annoyEmbed.add_field(name='User Removed', value='user <@{}> removed from annoyList'.format(self.ID))
+                    annoyEmbed.add_field(name='User Removed', value='user <@{}> removed from annoyList'.format(self.ID), inline=True)
                 elif self.ID not in self.annoyList:
                     self.annoyList.append(self.ID)
-                    annoyEmbed.add_field(name='User Added', value='user <@{}> added to annoyList'.format(self.ID))
+                    annoyEmbed.add_field(name='User Added', value='user <@{}> added to annoyList'.format(self.ID), inline=True)
                 
                 await message.send(embed=annoyEmbed)
                 
                 
         
         @bot.command()
-        async def award(message, args, points):
-            pass
-        
+        async def award(message, arg, points):
+            if message.author.id in self.trusted:
+                allowedList = ['1','2','3','4','5','6','7','8','9','0']
+                allowed = 0
+                
+                self.readJson('points.json')
+                self.mentionOrID(arg)
+                
+                for i in points:
+                    if i not in allowedList:
+                        allowed += 1
+                    else:
+                        allowed += 0
+                
+                if allowed == 0:
+                    pointEmbed = discord.Embed(color=0xACB5FF)
+                    pointEmbed.set_author(name='Action: Awarded points')
+                    if self.ID not in self.jsonDict:
+
+                        tempDict = {self.ID:int(points)}
+                        self.writeJson(tempDict, 'points.json')
+                        
+                        pointEmbed.add_field(name='Point Logs:', value='User <@{}> was awarded {} points, now they have {} points.'.format(self.ID, points, points), inline=True)
+                        
+                        await message.channel.send(embed=pointEmbed)
+                        
+                    else:
+                        oldPoints = self.jsonDict.pop(self.ID)
+                        newPoints = int(points)
+                        
+                        newValue = oldPoints + newPoints
+                        tempDict = {self.ID : newValue}    
+
+                        self.writeJson(tempDict, 'points.json')
+                        
+                        pointEmbed.add_field(name='Point Logs:', value='User <@{}> was awarded {} points, now they have {} points.'.format(self.ID, points, newValue), inline=True)
+                        
+                        await message.channel.send(embed=pointEmbed)
+                        
+                else:
+                    pointEmbed = discord.Embed(color=0xACB5FF, name='Exception Passed')
+                    pointEmbed.add_field(name='ValueError:', value="Expected int instead of {}".format(type(points)))
+                    
+                    await message.channel.send(embed=pointEmbed)
         
         @bot.command()
-        async def deduct(message, args, points):
-            pass
+        async def deduct(message, arg, points):
+            if message.author.id in self.trusted:
+                allowedList = ['1','2','3','4','5','6','7','8','9','0']
+                allowed = 0
+                
+                self.readJson('points.json')
+                self.mentionOrID(arg)
+                
+                for i in points:
+                    if i not in allowedList:
+                        allowed += 1
+                    else:
+                        allowed += 0
+                
+                if allowed == 0:
+                    pointEmbed = discord.Embed(color=0xACB5FF, name='User Deducted ~~good boy~~ points')
+                    pointEmbed.set_author(name='Action: Deducted points')
+                    if self.ID not in self.jsonDict:
+                        
+                        newPoints = points * -1
+                        tempDict = {self.ID:int(newPoints)}
+                        self.writeJson(tempDict, 'points.json')
+                        
+                        pointEmbed.add_field(name='Point Logs:', value='user <@{}> was deducted {} points, now they have {} points.'.format(self.ID, points, newPoints), inline=True)
+                        
+                        await message.channel.send(embed=pointEmbed)
+                        
+                    else:
+                        oldPoints = self.jsonDict.pop(self.ID)
+                        newPoints = int(points) * -1
+                        
+                        newValue = oldPoints + newPoints
+                        tempDict = {self.ID : newValue}    
+
+                        self.writeJson(tempDict, 'points.json')
+                        
+                        pointEmbed.add_field(name='Point Logs:', value='user <@{}> was deducted {} points, now they have {} points.'.format(self.ID, points, newValue), inline=True)
+                        
+                        await message.channel.send(embed=pointEmbed)
+                        
+                else:
+                    pointEmbed = discord.Embed(color=0xACB5FF, name='Exception Passed')
+                    pointEmbed.add_field(name='ValueError:', value="Expected int instead of {}".format(type(points)))
+                    
+                    await message.channel.send(embed=pointEmbed)
         
         
     def adminCommands(self):
@@ -169,13 +251,13 @@ class discBot():
             kickEmbed.set_author(name='action: User Kicked')
 
             if args == ():
-                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked'.format(self.ID))
+                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked'.format(self.ID), inline=True)
                 await message.guild.kick(kickVictim, reason='conducted by {}'.format(message.author))
             else:
                 kickReason = ''
                 for i in args:
                     kickReason = kickReason + ' ' + i
-                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked for {}'.format(self.ID, kickReason))
+                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked for {}'.format(self.ID, kickReason), inline=True)
                 
                 await message.guild.kick(kickVictim, reason=kickReason+' conducted by {}'.format(message.author))
             await message.send(embed=kickEmbed)
@@ -192,14 +274,14 @@ class discBot():
             allowed = 0
             
             def noReason():
-                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned (messages deleted in days: {})'.format(self.ID, days))
+                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned (messages deleted in days: {})'.format(self.ID, days), inline=True)
                 
                 
             def withReason():
                 self.banReason = ''
                 for i in args:
                     self.banReason = self.banReason + ' ' + i
-                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned for {} (messages deleted in days: {})'.format(self.ID, self.banReason, days))
+                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned for {} (messages deleted in days: {})'.format(self.ID, self.banReason, days), inline=True)
             
             for i in days:
                 if i not in allowedList:
@@ -227,7 +309,7 @@ class discBot():
                 if allowed != 0:
                     days = 0
                     error = 'tl;dr, the correct format is ;ban (userID/mention) (days) (reason). You passed reason without passing days so it defaulted to 0 days and banned wihtout a reason. Use the correct formatting next time >:|'
-                    banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned'.format(self.ID))
+                    banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned'.format(self.ID), inline=True)
                     banEmbed.set_footer(text=error)
                     await message.guild.ban(banVictim, delete_message_days=days) 
 
@@ -267,6 +349,7 @@ class discBot():
             helpUser.add_field(name=";help", value='prints out this menu', inline=True)
             helpUser.add_field(name=";ping", value='pong?', inline=True )
             helpUser.add_field(name=";embedthis (title) (body)", value='takes your mortal loser message and converts it into an embed (useless, I know)', inline=True )
+            helpUser.add_field(name=";points (targetID/mention)", value='displays how much ~~good boy~~ points the user has ', inline=True )
             helpUser.set_footer(text="this only exists because I don't comment my code :c (check out my github)")
             
             await message.channel.send(embed=helpUser)
@@ -289,14 +372,22 @@ class discBot():
             embedSend.add_field(name=title, value=embedList)
             
             await message.channel.send(embed=embedSend)
-                
-        
+            
+        @bot.command()
+        async def points(message, arg):
+            self.readJson('points.json')
+            self.mentionOrID(arg)
+            
+            displayPoints = discord.Embed(color=0xFFE3AC)
+            displayPoints.add_field(name='Current Points:', value='<@{}> currently has {} good boy points'.format(self.ID, self.jsonDict.get(str(self.ID))))
+            
+            await message.channel.send(embed=displayPoints)
             
     def serverLog(self): 
         @bot.event
         async def on_message(message):
             if message.author != bot.user:
-                self.readJson()
+                self.readJson('servers.json')
                 if str(message.guild.id) in self.jsonDict:
                     loggedChannel = self.jsonDict.get(str(message.guild.id))
                     loggedChannelGet = bot.get_channel(loggedChannel)
@@ -334,7 +425,6 @@ class discBot():
     
 
 if __name__ == "__main__":
-    client = discord.Client()   
     bot = commands.Bot(command_prefix=';')
     bot.remove_command('help')
     nest_asyncio.apply()
