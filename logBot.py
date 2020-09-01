@@ -106,7 +106,7 @@ class discBot():
         @bot.command()
         async def displayannoy(message):
             if message.author.id in self.trusted:
-                annoyEmbed = discord.Embed(title='Users being annoyed:', color=0xE5FF99)
+                annoyEmbed = discord.Embed(title='Victims being annoyed:', color=0xE5FF99)
                 for i in self.annoyList:
                     annoyEmbed.add_field(name='Victim:', value='<@{}>'.format(i))
                 await message.channel.send(embed=annoyEmbed)
@@ -116,7 +116,7 @@ class discBot():
             if message.author.id in self.trusted:
                 self.mentionOrID(userid)
                 
-                annoyEmbed = discord.Embed(color=0x99FFE5, title="Annoying lol")
+                annoyEmbed = discord.Embed(color=0x99FFE5, title="Annoying User")
                 
                 if self.ID in self.annoyList:
                     self.annoyList.remove(self.ID)
@@ -247,7 +247,10 @@ class discBot():
             
             helpOwner.add_field(name=";bindserver (server ID)", value='binds all messages from that server to be redirected to this channel (needs bot inside that server)', inline=True)
             helpOwner.add_field(name=';displayactive', value='displays all active servers for this channel', inline=True)
-            helpOwner.add_field(name=';annoy (user ID)', value='you get annoyed. Idiot', inline=True)
+            helpOwner.add_field(name=';annoy (targetID/mention)', value='you get annoyed. Idiot', inline=True)
+            helpOwner.add_field(name=';displayannoy', value='shows all victims of harassment', inline=True)
+            helpOwner.add_field(name=';award (targetID) (points)', value='gives good boy points', inline=True)
+            helpOwner.add_field(name=';deduct (targetID) (points)', value='takes away good boy points', inline=True)
             helpOwner.set_footer(text="this only exists because I don't comment my code :c (check out my github)")
             
             await message.channel.send(embed=helpOwner)
