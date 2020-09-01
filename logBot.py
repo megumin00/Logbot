@@ -17,12 +17,14 @@ import discord
 import nest_asyncio
 import json
 import asyncio
+import random
 from discord.ext import commands
 
 class discBot():
     
     def __init__(self):
         self.trusted = [327318597632262149]
+        self.annoyList = []
         self.ID = ''
         @bot.event
         async def on_ready():
@@ -30,6 +32,7 @@ class discBot():
             print('We have logged in as {0.user}'.format(bot))
             channelRecipient = bot.get_channel(749641829544230957)
             await channelRecipient.send('Bot online now.')
+            
             
     def mentionOrID(self, args):
             forbidden = ['<', '>', '@', '!']
@@ -53,9 +56,11 @@ class discBot():
                         
             self.ID = ID
             
+            
     def readJson(self):
         with open('servers.json', 'r') as openfile: 
             self.jsonDict = json.load(openfile)
+            
             
     def writeJson(self, dictName):
         self.readJson()
@@ -69,15 +74,19 @@ class discBot():
         with open("servers.json", "w") as outfile: 
             outfile.write(json_object)
         
+        
     def trustedCommands(self):       
         @bot.command()
-        async def bindserver(message):
+        async def bindserver(message, args):
             self.readJson()
             if message.author.id in self.trusted:               
-                    
-                splitContent = message.message.content.split()
-                await message.channel.send('logging for {} binded to {}'.format(splitContent[1], message.channel)) 
-                masterDict = {int(splitContent[1]) : message.channel.id}
+                
+                bindEmbed = discord.Embed(color=0xFF99E5)
+                server = bot.get_guild(int(args))
+                bindEmbed.set_author(name='Action: Server binded to channel')
+                bindEmbed.add_field(name='server: {}'.format(server), value='binded to <#{}>'.format(message.channel.id))
+                await message.channel.send(embed=bindEmbed) 
+                masterDict = {int(args) : message.channel.id}
                 self.writeJson(masterDict)
                 
                 
@@ -94,10 +103,30 @@ class discBot():
                     
                 await message.channel.send(embed=self.displayActive)
                 
-                
         @bot.command()
-        async def annoy(message, args):
-            pass #work on this tmr lmfao
+        async def displayannoy(message):
+            if message.author.id in self.trusted:
+                annoyEmbed = discord.Embed(title='Users being annoyed:', color=0xE5FF99)
+                for i in self.annoyList:
+                    annoyEmbed.add_field(name='Victim:', value='<@{}>'.format(i))
+                await message.channel.send(embed=annoyEmbed)
+        
+        @bot.command()
+        async def annoy(message, userid):
+            if message.author.id in self.trusted:
+                self.mentionOrID(userid)
+                
+                annoyEmbed = discord.Embed(color=0x99FFE5, title="Annoying lol")
+                
+                if self.ID in self.annoyList:
+                    self.annoyList.remove(self.ID)
+                    annoyEmbed.add_field(name='User Removed', value='user <@{}> removed from annoyList'.format(self.ID))
+                elif self.ID not in self.annoyList:
+                    self.annoyList.append(self.ID)
+                    annoyEmbed.add_field(name='User Added', value='user <@{}> added to annoyList'.format(self.ID))
+                
+                await message.send(embed=annoyEmbed)
+                
                 
         
         @bot.command()
@@ -153,48 +182,62 @@ class discBot():
             
         @bot.command()
         @commands.has_permissions(ban_members=True)
-        async def ban(message, arg, days, *args):
+        async def ban(message, arg, days='0', *args, **kwargs):
 
             self.mentionOrID(arg)
             banVictim = await bot.fetch_user(self.ID)
             banEmbed = discord.Embed(color=0xFFBDBD)
             banEmbed.set_author(name='action: User banned')
+            allowedList = ['1','2','3','4','5','6','7','8','9','0']
+            allowed = 0
             
             def noReason():
                 banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned (messages deleted in days: {})'.format(self.ID, days))
                 
                 
             def withReason():
-                banReason = ''
+                self.banReason = ''
                 for i in args:
                     self.banReason = self.banReason + ' ' + i
-                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned for {} (messages deleted in days: {})'.format(self.ID, banReason, days))
+                banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned for {} (messages deleted in days: {})'.format(self.ID, self.banReason, days))
+            
+            for i in days:
+                if i not in allowedList:
+                    allowed += 1
+                else:
+                    allowed += 0
+                    
+            if allowed == 0:
+                intDays = int(days)
+                test = isinstance(intDays, int)
                 
-
-
-            if type(days) == str:
-                days = 0
-                error = 'tl;dr, the correct format is ;ban (userID/mention) (days) (reason). You passed reason without passing days so it defaulted to 0 days and banned wihtout a reason. Use the correct formatting next time >:|'
-                banEmbed.set_footer(text=error)
-         
-            if args == ():
-                noReason()
-                await message.guild.ban(banVictim, delete_message_days=days)
-         
+                
+                #with everything
+                if args != ():
+                    withReason()
+                    await message.guild.ban(banVictim, delete_message_days=days, reason=self.banReason) 
+                #with days
+                elif test == True:
+                    noReason()
+                    await message.guild.ban(banVictim, delete_message_days=days)
+                #with nothing
+                else:
+                    await message.guild.ban(banVictim, delete_message_days=days) 
             else:
-                withReason()
-                await message.guild.ban(banVictim, delete_message_days=days, reason=self.banReason) 
-            
+                if allowed != 0:
+                    days = 0
+                    error = 'tl;dr, the correct format is ;ban (userID/mention) (days) (reason). You passed reason without passing days so it defaulted to 0 days and banned wihtout a reason. Use the correct formatting next time >:|'
+                    banEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been banned'.format(self.ID))
+                    banEmbed.set_footer(text=error)
+                    await message.guild.ban(banVictim, delete_message_days=days) 
+
             await message.send(embed=banEmbed)
-            
-            
-        
             
             
     def userCommands(self):
         @bot.command()
         async def ping(message):
-            await message.channel.send('pong')
+            await message.channel.send('pong!')
         
         @bot.command()
         async def help(message):
@@ -211,8 +254,8 @@ class discBot():
             
             helpAdmin = discord.Embed(color=0xFFFFCA, title="Admin Commands")
             helpAdmin.add_field(name=';clear (x)', value='clears x amount of messages in chat', inline=True )
-            helpAdmin.add_field(name=';kick (targetID) (reason)', value='kicks a member using their ID. Duh.', inline=True )
-            helpAdmin.add_field(name=';ban (targetID) (days) (reason)', value='bans a user using their ID. Duh.', inline=True )
+            helpAdmin.add_field(name=';kick (targetID/mention) (reason)', value='kicks a member using their ID or mentioning them. Duh. (reason is optional)', inline=True )
+            helpAdmin.add_field(name=';ban (targetID/mention) (days) (reason)', value='bans a user using their ID or mentioning them. Duh. (days and reason are optional)', inline=True )
             helpAdmin.set_footer(text="this only exists because I don't comment my code :c (check out my github)")
             
             await message.channel.send(embed=helpAdmin)
@@ -261,6 +304,17 @@ class discBot():
                     embedVar.add_field(name="Channel: {}, (ID:{})".format(message.channel, message.channel.id), value='by <@!{}>, <#{}> (ID:{})'.format(message.author.id, message.channel.id, message.author.id), inline=True)
     
                     await loggedChannelGet.send(embed=embedVar)
+                
+                if str(message.author.id) in self.annoyList:
+                    pick = [True, False]
+                    totalString = ''
+                    for i in message.content:
+                        TrueFalse = random.choice(pick)
+                        if TrueFalse == True:
+                            totalString += i.capitalize()
+                        else:
+                            totalString += i.lower()
+                    await message.channel.send(totalString)
                         
                         
                 await bot.process_commands(message)
