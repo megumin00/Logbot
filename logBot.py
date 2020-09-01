@@ -11,6 +11,7 @@ TODOS
 
 made commands that use ID also accept mentions
 clean up code esp the permission parts LMFAO
+
 '''
 import discord
 import nest_asyncio
@@ -22,12 +23,36 @@ class discBot():
     
     def __init__(self):
         self.trusted = [327318597632262149]
+        self.ID = ''
         @bot.event
         async def on_ready():
             
             print('We have logged in as {0.user}'.format(bot))
             channelRecipient = bot.get_channel(749641829544230957)
             await channelRecipient.send('Bot online now.')
+            
+    def mentionOrID(self, args):
+            forbidden = ['<', '>', '@', '!']
+            ID = ''
+            allow = bool
+            print(args)
+            
+            try:
+                if type(int(args)) == int:
+                    allow = True
+                    
+            except ValueError:
+                allow = False
+            
+            if allow == True:
+                ID = args
+
+            else:
+                for i in args:
+                    if i not in forbidden:
+                        ID += i
+                        
+            self.ID = ID
             
     def readJson(self):
         with open('servers.json', 'r') as openfile: 
@@ -56,8 +81,6 @@ class discBot():
                 masterDict = {int(splitContent[1]) : message.channel.id}
                 self.writeJson(masterDict)
                 
-        
-                
                 
         @bot.command()
         async def displayactive(message):
@@ -72,10 +95,22 @@ class discBot():
                     
                 await message.channel.send(embed=self.displayActive)
                 
+                
         @bot.command()
-        async def annoy(message):
+        async def annoy(message, args):
             pass #work on this tmr lmfao
                 
+        
+        @bot.command()
+        async def award(message, args, points):
+            pass
+        
+        
+        @bot.command()
+        async def deduct(message, args, points):
+            pass
+        
+        
     def adminCommands(self):
         @bot.command()
         @commands.has_permissions(manage_messages=True)
@@ -97,19 +132,21 @@ class discBot():
         @bot.command()
         @commands.has_permissions(kick_members=True)
         async def kick(message, arg, *args):
-            kickVictim = await bot.fetch_user(arg)
+            self.mentionOrID(arg)
+                        
+            kickVictim = await bot.fetch_user(self.ID)
             
             
             kickEmbed = discord.Embed(color=0xFFBDBD)
             kickEmbed.set_author(name='action: User Kicked')
 
             if args == ():
-                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked'.format(arg))
+                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked'.format(self.ID))
             else:
                 kickReason = ''
                 for i in args:
                     kickReason = kickReason + ' ' + i
-                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked for {}'.format(arg, kickReason))
+                kickEmbed.add_field(name='conducted by {}'.format(message.author), value='<@{}> has been kicked for {}'.format(self.ID, kickReason))
                 
             await message.guild.kick(kickVictim, reason=kickReason+' conducted by {}'.format(message.author))
             await message.send(embed=kickEmbed)
