@@ -9,6 +9,9 @@ Created on Thu Aug 27 15:02:02 2020
 '''
 TODOS
 
+made commands that use ID also accept mentions
+clean up code esp the permission parts LMFAO
+
 '''
 import discord
 import nest_asyncio
@@ -74,15 +77,15 @@ class discBot():
         
     def trustedCommands(self):       
         @bot.command()
-        async def bindserver(message, server):
+        async def bindserver(message, serverid):
             self.readJson('servers.json')
             if message.author.id in self.trusted:               
                 bindEmbed = discord.Embed(color=0xFF99E5)
-                server = bot.get_guild(int(server))
+                server = bot.get_guild(int(serverid))
                 bindEmbed.set_author(name='Action: Server binded to channel')
                 bindEmbed.add_field(name='server: {}'.format(server), value='binded to <#{}>'.format(message.channel.id), inline=True)
                 await message.channel.send(embed=bindEmbed) 
-                masterDict = {int(server) : message.channel.id}
+                masterDict = {int(serverid) : (message.channel.id)}
                 self.writeJson(masterDict, 'servers.json')
                 
                 
@@ -126,13 +129,13 @@ class discBot():
                 
         
         @bot.command()
-        async def award(message, arg, points):
+        async def award(message, user, points):
             if message.author.id in self.trusted:
                 allowedList = ['1','2','3','4','5','6','7','8','9','0']
                 allowed = 0
                 
                 self.readJson('points.json')
-                self.mentionOrID(arg)
+                self.mentionOrID(user)
                 
                 for i in points:
                     if i not in allowedList:
@@ -172,13 +175,13 @@ class discBot():
                     await message.channel.send(embed=pointEmbed)
         
         @bot.command()
-        async def deduct(message, arg, points):
+        async def deduct(message, user, points):
             if message.author.id in self.trusted:
                 allowedList = ['1','2','3','4','5','6','7','8','9','0']
                 allowed = 0
                 
                 self.readJson('points.json')
-                self.mentionOrID(arg)
+                self.mentionOrID(user)
                 
                 for i in points:
                     if i not in allowedList:
@@ -222,15 +225,15 @@ class discBot():
     def adminCommands(self):
         @bot.command()
         @commands.has_permissions(manage_messages=True)
-        async def clear(message, arg):
+        async def clear(message, clearAmount):
             messages = []
             
-            async for i in message.history(limit=int(arg)+1):
+            async for i in message.history(limit=int(clearAmount)+1):
                 
                 messages.append(i)
                 
             await message.channel.delete_messages(messages)
-            await message.channel.send('Cleared `{}` Message(s)'.format(arg))
+            await message.channel.send('Cleared `{}` Message(s)'.format(clearAmount))
 
             async for i in message.history(limit=1):
                 selfClear = [i]
@@ -239,8 +242,8 @@ class discBot():
                 
         @bot.command()
         @commands.has_permissions(kick_members=True)
-        async def kick(message, arg, *args):
-            self.mentionOrID(arg)
+        async def kick(message, user, *args):
+            self.mentionOrID(user)
                         
             kickVictim = await bot.fetch_user(self.ID)
             
@@ -262,9 +265,9 @@ class discBot():
             
         @bot.command()
         @commands.has_permissions(ban_members=True)
-        async def ban(message, arg, days='0', *args, **kwargs):
+        async def ban(message, user, days='0', *args, **kwargs):
 
-            self.mentionOrID(arg)
+            self.mentionOrID(user)
             banVictim = await bot.fetch_user(self.ID)
             banEmbed = discord.Embed(color=0xFFBDBD)
             banEmbed.set_author(name='action: User banned')
@@ -357,7 +360,7 @@ class discBot():
             await message.channel.send(embed=moreInfo)
             
         @bot.command()
-        async def embedthis(message, title, *args):
+        async def embedthis(message, embedInfo, *args):
             user = message.guild.get_member(message.author.id)
             pfp = user.avatar_url
             embedList = ''
@@ -367,14 +370,14 @@ class discBot():
             embedSend = discord.Embed(color=0xBDBDFF)
             embedSend.set_author(name='Embed requested from {}'.format(message.author),
             icon_url=str(pfp))
-            embedSend.add_field(name=title, value=embedList)
+            embedSend.add_field(name=embedInfo, value=embedList)
             
             await message.channel.send(embed=embedSend)
             
         @bot.command()
-        async def points(message, arg):
+        async def points(message, user):
             self.readJson('points.json')
-            self.mentionOrID(arg)
+            self.mentionOrID(user)
             
             displayPoints = discord.Embed(color=0xFFE3AC)
             displayPoints.add_field(name='Current Points:', value='<@{}> currently has {} good boy points'.format(self.ID, self.jsonDict.get(str(self.ID))))
@@ -386,16 +389,23 @@ class discBot():
         async def on_message(message):
             if message.author != bot.user:
                 self.readJson('servers.json')
-                if str(message.guild.id) in self.jsonDict:
-                    loggedChannel = self.jsonDict.get(str(message.guild.id))
-                    loggedChannelGet = bot.get_channel(loggedChannel)
-                        
-                    embedVar = discord.Embed(title="{}".format(message.content), color=0xFFCAFF)
-                    embedVar.set_author(name="Message sent in {}, (ID:{})".format(message.guild, message.guild.id),
-                    icon_url='https://cdn.discordapp.com/attachments/748479776666419223/749449403080900698/chillstolfo.png')
-                    embedVar.add_field(name="Channel: {}, (ID:{})".format(message.channel, message.channel.id), value='by <@!{}>, <#{}> (ID:{})'.format(message.author.id, message.channel.id, message.author.id), inline=True)
-    
-                    await loggedChannelGet.send(embed=embedVar)
+                
+                for servers in self.jsonDict:
+                    if str(message.guild.id) == servers:
+                        loggedChannel = self.jsonDict.get(str(servers))
+                        loggedChannelGet = bot.get_channel(loggedChannel)
+                        user = message.guild.get_member(message.author.id)
+                        pfp = user.avatar_url
+                            
+                        embedVar = discord.Embed(title="{}".format(message.content), color=0xFFCAFF)
+                        embedVar.set_author(name="{}".format(message.author),
+                        icon_url=pfp)
+                        embedVar.add_field(name="Channel: {}, (ID:{})".format(message.channel, message.channel.id), value='by <@!{}>, <#{}> (ID:{})'.format(message.author.id, message.channel.id, message.author.id), inline=True)
+        
+                        await loggedChannelGet.send(embed=embedVar)
+                    
+                
+                
                 
                 if str(message.author.id) in self.annoyList:
                     pick = [True, False]
@@ -425,10 +435,7 @@ class discBot():
         self.adminCommands()
         self.userCommands()
         self.serverLog()
-        
         bot.run('')
-        
-    
 
 if __name__ == "__main__":
     bot = commands.Bot(command_prefix=';')
