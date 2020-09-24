@@ -9,20 +9,19 @@ Created on Thu Aug 27 15:02:02 2020
 '''
 TODOS
 
-made commands that use ID also accept mentions
-clean up code esp the permission parts LMFAO
-
 '''
 import discord
 import nest_asyncio
 import json
 import asyncio
 import random
+import logging
 from discord.ext import commands
 
 class discBot():
     
     def __init__(self):
+        logging.basicConfig(level=logging.INFO)
         self.trusted = [327318597632262149]
         self.annoyList = []
         self.ID = ''
@@ -75,16 +74,15 @@ class discBot():
         
     def trustedCommands(self):       
         @bot.command()
-        async def bindserver(message, args):
+        async def bindserver(message, server):
             self.readJson('servers.json')
             if message.author.id in self.trusted:               
-                
                 bindEmbed = discord.Embed(color=0xFF99E5)
-                server = bot.get_guild(int(args))
+                server = bot.get_guild(int(server))
                 bindEmbed.set_author(name='Action: Server binded to channel')
                 bindEmbed.add_field(name='server: {}'.format(server), value='binded to <#{}>'.format(message.channel.id), inline=True)
                 await message.channel.send(embed=bindEmbed) 
-                masterDict = {int(args) : message.channel.id}
+                masterDict = {int(server) : message.channel.id}
                 self.writeJson(masterDict, 'servers.json')
                 
                 
@@ -110,9 +108,9 @@ class discBot():
                 await message.channel.send(embed=annoyEmbed)
         
         @bot.command()
-        async def annoy(message, userid):
+        async def annoy(message, user):
             if message.author.id in self.trusted:
-                self.mentionOrID(userid)
+                self.mentionOrID(user)
                 
                 annoyEmbed = discord.Embed(color=0x99FFE5, title="Annoying User")
                 
@@ -328,7 +326,7 @@ class discBot():
             icon_url='https://cdn.discordapp.com/attachments/748479776666419223/749449403080900698/chillstolfo.png')
             
             helpOwner.add_field(name=";bindserver (server ID)", value='binds all messages from that server to be redirected to this channel (needs bot inside that server)', inline=True)
-            helpOwner.add_field(name=';displayactive', value='displays all active servers for this channel', inline=True)
+            helpOwner.add_field(name=';displayactive', value='displays all active servers', inline=True)
             helpOwner.add_field(name=';annoy (targetID/mention)', value='you get annoyed. Idiot', inline=True)
             helpOwner.add_field(name=';displayannoy', value='shows all victims of harassment', inline=True)
             helpOwner.add_field(name=';award (targetID) (points)', value='gives good boy points', inline=True)
@@ -413,6 +411,14 @@ class discBot():
                         
                 await bot.process_commands(message)
                     
+        
+        @bot.listen("on_command_error")
+        async def on_command_error(message, error):        
+            error = error.__cause__ or error
+            if isinstance(error, commands.CommandNotFound):
+                return
+            
+            await message.send(error)
             
     def run(self):
         self.trustedCommands()
