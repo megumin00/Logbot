@@ -30,7 +30,7 @@ admin commands(you need permissions lol):
 user commands(anyone can use these(you pleb)):
 
 
-;help                                   - it gives you help? its kinda obvious?
+;help                                   - displays help menu 
 
 ;ping                                   - replies with pong
 
