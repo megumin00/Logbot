@@ -1,4 +1,4 @@
-# authoritarian-dictatorship-discbot
+# LogBot
 
 trusted commands(ur user ID needs to be in self.trusted in __init__):
 
@@ -41,4 +41,4 @@ user commands(anyone can use these(you pleb)):
 
 I still kinda need to comment code lol
 
-By weeeb_#2897
+By weeeb_#2897 (now l1tty#8385)
