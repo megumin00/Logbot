@@ -7,7 +7,7 @@ trusted commands(ur user ID needs to be in self.trusted in __init__):
 
 ;displayactive                          - displays all active servers 
 
-;annoy (targetID/mention)               - you get annoyed. Idiot
+;annoy (targetID/mention)               - you get annoyed.
 
 ;displayannoy                           - shows all victims of harassment
 
