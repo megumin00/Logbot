@@ -1,5 +1,10 @@
 # LogBot
+Basic discord bot written to compile messages for mostly administration purposes
 
+## License
+GPL-3.0 License
+
+## Commands
 trusted commands(ur user ID needs to be in self.trusted in __init__):
 
 
@@ -38,7 +43,5 @@ user commands(anyone can use these(you pleb)):
 
 ;points (targetID/mention)              - displays how much ~~good boy~~ points the user has
 
-
-I still kinda need to comment code lol
-
-By weeeb_#2897 (now l1tty#8385)
+## Contributors
+megumin00
